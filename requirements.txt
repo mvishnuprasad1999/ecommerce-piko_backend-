@@ -1,0 +1,10 @@
+fastapi
+pydentic
+pydantic_settings
+SQLAlchemy
+psycopg2-binary
+pgvector
+sentence_transformers
+textblob
+groq
+cloudinary

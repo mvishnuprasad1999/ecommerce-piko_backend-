@@ -1,0 +1,413 @@
+##main.py
+# from fastapi import FastAPI,HTTPException,Depends
+# from sqlalchemy.orm import Session
+# from db_core import model
+# from db_core.db import engine,get_db
+# from db_core.model import Productmodeldb
+# from src import product
+# from src.product import Productmodel,ProductUpdate
+# from fastapi.staticfiles import StaticFiles
+# from src.embedings import get_embedding
+# from datetime import date, timedelta
+# from src.user_query import parse_query
+# from sqlalchemy import text
+# import os
+# import re
+
+
+# app=FastAPI()
+
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# app.mount(
+#     "/images",
+#     StaticFiles(directory=os.path.join(BASE_DIR, "images")),
+#     name="images"
+# )
+
+# @app.get("/")
+# def welcome():
+#     return{"message":"welcome to piko "}
+
+
+# model.Base.metadata.create_all(bind=engine)
+
+
+# @app.post("/add_new_products")
+# def add_product(body: Productmodel, db: Session = Depends(get_db)):
+#     data = body.model_dump(exclude_unset=True)
+#     text_data = f"{data['name']} {data['description']} {data['category']}"
+#     embedding = get_embedding(text_data)
+
+#     new_product = Productmodeldb(**data, embedding=embedding)
+
+#     db.add(new_product)
+#     db.commit()
+#     db.refresh(new_product)
+
+#     return {
+#         "message": "Product created successfully",
+#         "data": {
+#             "id": new_product.id,
+#             "name": new_product.name,
+#             "description": new_product.description,
+#             "category": new_product.category,
+#             "mrp": new_product.mrp,
+#             "selling_price": new_product.selling_price,
+#             "expiry_date": new_product.expiry_date,
+#             "stock": new_product.stock,
+#             "product_imge_url": new_product.product_imge_url,
+#             "is_added": new_product.is_added,
+#             "created_at": new_product.created_at,
+#         }
+#     }
+ 
+# @app.get("/get_all_products")
+# def get_all_products(db: Session = Depends(get_db)):
+#     products=db.query(Productmodeldb).all()
+#     return{"message":"all products fetched","products":products}
+
+# @app.get("/get_one_product/{product_id}")
+# def get_one_product(product_id:int,db: Session = Depends(get_db)):
+#     product=db.query(Productmodeldb).filter(Productmodeldb.id==product_id).first()
+#     if not product:
+#         return{"message":"product not fount"}
+#     return product
+
+# @app.put("/update_product/{product_id}")
+# def update_product(body:ProductUpdate,product_id: int,db: Session = Depends(get_db)):
+#     one_product=db.query(Productmodeldb).filter(Productmodeldb.id == product_id).first()
+#     if not one_product:
+#         raise HTTPException(404,detail="product id is not correct")
+#     update_data = body.model_dump(exclude_unset=True)
+#     for key, value in update_data.items():
+#         setattr(one_product, key, value)
+
+#         # db.add(one_product)
+#         db.commit()
+#         db.refresh(one_product)
+#     return{"status":"product updated successfully","product":one_product}
+
+# @app.delete("/delete_product/{product_id}")
+# def delete_product(product_id: int, db: Session = Depends(get_db)):
+
+#     product = db.query(Productmodeldb).filter(Productmodeldb.id == product_id).first()
+
+#     if not product:
+#         return {"message": "product not found"}
+
+#     db.delete(product)   # ✅ delete object
+#     db.commit()          # ✅ save changes
+
+#     return {
+#         "status": "product deleted successfully"
+#     }
+
+
+
+# @app.get("/search")
+# def search(query: str, db: Session = Depends(get_db)):
+
+#     # STEP 1: Query Parsing
+#     filters = parse_query(query)
+
+#     # STEP 2: Extract text part
+#     clean_query = re.sub(r'\d+', '', query)
+
+#     # STEP 3: Query → Embedding
+#     query_vector = get_embedding(clean_query)
+
+#     # STEP 4: Convert to string format pgvector understands
+#     vector_str = "[" + ",".join(str(x) for x in query_vector) + "]"
+
+#     # STEP 5: Vector Compare
+#     results = db.execute(text("""
+#         SELECT *, embedding <-> CAST(:q AS vector) AS distance
+#         FROM products
+#         ORDER BY distance ASC
+#         LIMIT 50
+#     """), {"q": vector_str})
+
+#     products = results.fetchall()
+
+#     # STEP 6: Apply Filters
+#     filtered = []
+#     for p in products:
+#         if "max_price" in filters and p.selling_price > filters["max_price"]:
+#             continue
+#         if "expiry_soon" in filters:
+#             if p.expiry_date > date.today() + timedelta(days=2):
+#                 continue
+#         if "expiry_date" in filters:
+#             if p.expiry_date != filters["expiry_date"]:
+#                 continue
+#         filtered.append(p)
+
+#     # STEP 7: Ranking
+#     def score(p):
+#         days_left = (p.expiry_date - date.today()).days
+#         expiry_score = 1 / (days_left + 1)
+#         price_score = 1 / (p.selling_price + 1)
+#         similarity_score = 1 - p.distance
+#         return (
+#             similarity_score * 0.5 +
+#             expiry_score * 0.3 +
+#             price_score * 0.2
+#         )
+
+#     ranked = sorted(filtered, key=score, reverse=True)
+
+#     return [
+#         {c: getattr(p, c) for c in p._fields if c != "embedding"}
+#         for p in ranked[:10]
+#     ]
+# def main():
+#     print("Hello from piko-backend!")
+
+
+# if __name__ == "__main__":
+#     main()
+# @app.post("/add_new_products")
+# def add_product(body: Productmodel, db: Session = Depends(get_db)):
+#     data = body.model_dump(exclude_unset=True)
+#     # 🔥 STEP 1: combine columns
+#     text_data = f"{data['name']} {data['description']} {data['category']}"
+
+#     # 🔥 STEP 2: convert to embedding
+#     embedding = get_embedding(text_data)
+
+#     new_product = Productmodeldb(**data,embedding=embedding)  # ✅ use DB model
+
+#     db.add(new_product)
+#     db.commit()
+#     db.refresh(new_product)
+
+#     return {
+#         "message": "Product created successfully",
+#         "data": new_product
+#     }
+
+
+
+
+
+
+
+# from fastapi import FastAPI, HTTPException, Depends
+# from sqlalchemy.orm import Session
+# from db_core import model
+# from db_core.db import engine, get_db
+# from db_core.model import Productmodeldb
+# from product import Productmodel, ProductUpdate
+# from fastapi.staticfiles import StaticFiles
+# from src.embedingsllm.llm import get_embedding
+# from src.search.user_query import parse_query
+# from datetime import date, datetime, timedelta
+# from sqlalchemy import text
+# from textblob import TextBlob
+# import os
+# import re
+
+
+# app = FastAPI()
+
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# app.mount(
+#     "/images",
+#     StaticFiles(directory=os.path.join(BASE_DIR, "images")),
+#     name="images"
+# )
+
+# model.Base.metadata.create_all(bind=engine)
+
+
+# def product_to_dict(p):
+#     return {c.name: getattr(p, c.name) for c in p.__table__.columns if c.name != "embedding"}
+
+
+# @app.get("/")
+# def welcome():
+#     return {"message": "welcome to piko"}
+
+
+# @app.post("/add_new_products")
+# def add_product(body: Productmodel, db: Session = Depends(get_db)):
+#     data = body.model_dump(exclude_unset=True)
+#     data.pop("id", None)
+#     data.pop("created_at", None)
+#     text_data = f"{data['name']} {data['description']} {data['category']}"
+#     embedding = get_embedding(text_data)
+#     new_product = Productmodeldb(**data, embedding=embedding)
+#     db.add(new_product)
+#     db.commit()
+#     db.refresh(new_product)
+#     return {
+#         "message": "Product created successfully",
+#         "data": product_to_dict(new_product)
+#     }
+
+
+# @app.get("/get_all_products")
+# def get_all_products(db: Session = Depends(get_db)):
+#     products = db.query(Productmodeldb).all()
+#     return {
+#         "message": "all products fetched",
+#         "products": [product_to_dict(p) for p in products]
+#     }
+
+
+# @app.get("/get_one_product/{product_id}")
+# def get_one_product(product_id: int, db: Session = Depends(get_db)):
+#     product = db.query(Productmodeldb).filter(Productmodeldb.id == product_id).first()
+#     if not product:
+#         return {"message": "product not found"}
+#     return product_to_dict(product)
+
+
+# @app.put("/update_product/{product_id}")
+# def update_product(body: ProductUpdate, product_id: int, db: Session = Depends(get_db)):
+#     one_product = db.query(Productmodeldb).filter(Productmodeldb.id == product_id).first()
+#     if not one_product:
+#         raise HTTPException(404, detail="product id is not correct")
+#     update_data = body.model_dump(exclude_unset=True)
+#     for key, value in update_data.items():
+#         setattr(one_product, key, value)
+#     db.commit()
+#     db.refresh(one_product)
+#     return {"status": "product updated successfully", "product": product_to_dict(one_product)}
+
+
+# @app.delete("/delete_product/{product_id}")
+# def delete_product(product_id: int, db: Session = Depends(get_db)):
+#     product = db.query(Productmodeldb).filter(Productmodeldb.id == product_id).first()
+#     if not product:
+#         return {"message": "product not found"}
+#     db.delete(product)
+#     db.commit()
+#     return {"status": "product deleted successfully"}
+
+
+# @app.get("/search")
+# def search(query: str, db: Session = Depends(get_db)):
+
+#     # STEP 1: Spell correction
+#     corrected_query = str(TextBlob(query).correct())
+
+#     # STEP 2: Parse filters
+#     filters = parse_query(corrected_query)
+
+#     # STEP 3: Extract clean keyword (remove filter words and numbers)
+#     stop_words = [
+#         "under", "below", "above", "over", "less", "than", "more",
+#         "greater", "between", "and", "upto", "up", "to", "price",
+#         "products", "show", "me", "get", "find", "expiring", "soon",
+#         "expiry", "quantity", "qty", "stock", "cheap", "cheapest"
+#     ]
+#     clean_query = re.sub(r'[₹\d]', '', corrected_query).strip()
+#     keywords = [w for w in clean_query.lower().split() if w not in stop_words]
+#     keyword = " ".join(keywords).strip()
+
+#     # STEP 4: Embedding
+#     query_vector = get_embedding(keyword if keyword else corrected_query)
+#     vector_str = "[" + ",".join(str(x) for x in query_vector) + "]"
+
+#     # STEP 5: Build WHERE clause dynamically
+#     where_clauses = []
+#     params = {"q": vector_str}
+
+#     if keyword:
+#         where_clauses.append("""
+#             (name ILIKE :keyword
+#             OR description ILIKE :keyword
+#             OR category ILIKE :keyword)
+#         """)
+#         params["keyword"] = f"%{keyword}%"
+
+#     if "category" in filters:
+#         where_clauses.append("LOWER(category) = :category")
+#         params["category"] = filters["category"]
+
+#     where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+
+#     # STEP 6: Vector search
+#     results = db.execute(text(f"""
+#         SELECT *,
+#             embedding <-> CAST(:q AS vector) AS distance
+#         FROM products
+#         {where_sql}
+#         ORDER BY distance ASC
+#         LIMIT 30
+#     """), params)
+
+#     products = results.fetchall()
+
+#     # STEP 7: Fallback — pure vector if nothing found
+#     if not products:
+#         results = db.execute(text("""
+#             SELECT *,
+#                 embedding <-> CAST(:q AS vector) AS distance
+#             FROM products
+#             ORDER BY distance ASC
+#             LIMIT 30
+#         """), {"q": vector_str})
+#         products = results.fetchall()
+
+#     # STEP 8: Apply filters
+#     filtered = []
+#     for p in products:
+#         if "max_price" in filters and p.selling_price > filters["max_price"]:
+#             continue
+#         if "min_price" in filters and p.selling_price < filters["min_price"]:
+#             continue
+#         if "min_stock" in filters and p.stock < filters["min_stock"]:
+#             continue
+#         try:
+#             expiry = datetime.strptime(p.expiry_date, "%Y-%m-%d").date()
+#         except:
+#             filtered.append(p)
+#             continue
+#         if "expiry_soon" in filters:
+#             if expiry > date.today() + timedelta(days=2):
+#                 continue
+#         if "expiry_date" in filters:
+#             if expiry != filters["expiry_date"]:
+#                 continue
+#         filtered.append(p)
+
+#     # STEP 9: Fallback — if filters removed everything, return top vector results
+#     if not filtered and products:
+#         filtered = list(products)
+
+#     # STEP 10: Ranking
+#     def score(p):
+#         try:
+#             expiry = datetime.strptime(p.expiry_date, "%Y-%m-%d").date()
+#             days_left = (expiry - date.today()).days
+#             expiry_score = 1 / (days_left + 1) if days_left >= 0 else 0
+#         except:
+#             expiry_score = 0
+#         price_score = 1 / (p.selling_price + 1)
+#         similarity_score = 1 - p.distance
+#         return (
+#             similarity_score * 0.5 +
+#             expiry_score * 0.3 +
+#             price_score * 0.2
+#         )
+
+#     ranked = sorted(filtered, key=score, reverse=True)
+
+#     return {
+#         "query": query,
+#         "corrected_query": corrected_query,
+#         "extracted_keyword": keyword,
+#         "filters_applied": filters,
+#         "total": len(ranked),
+#         "results": [
+#             {c: getattr(p, c) for c in p._fields if c != "embedding"}
+#             for p in ranked[:10]
+#         ]
+#     }
+
+#for search http://127.0.0.1:8000/search?query=under price 50 (type like this)change
+#after= part
