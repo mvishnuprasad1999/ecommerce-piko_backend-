@@ -1,5 +1,5 @@
 fastapi
-pydentic
+pydantic
 pydantic_settings
 SQLAlchemy
 psycopg2-binary
@@ -8,3 +8,7 @@ sentence_transformers
 textblob
 groq
 cloudinary
+uvicorn
+python-dotenv
+pillow
+python-multipart
