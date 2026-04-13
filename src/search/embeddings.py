@@ -26,7 +26,7 @@ import os
 import httpx
 
 def get_embedding(text: str) -> list:
-    api_url = "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2"
+    api_url = "https://router.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2"
     headers = {"Authorization": f"Bearer {os.getenv('HF_TOKEN', '')}"}
     
     response = httpx.post(api_url, json={"inputs": text}, timeout=30)
