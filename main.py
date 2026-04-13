@@ -99,9 +99,9 @@ def create_product(
 
     # Create product in database
     product = crud.create_product(
-        db, name, description, category,
-        mrp,quantity,brand, selling_price, expiry_date, stock, image_url
-    )
+    db, name, description, category,
+    mrp, brand, quantity, selling_price, expiry_date, stock, image_url
+)
     
     # Return product data WITHOUT embedding (clean response)
     return {

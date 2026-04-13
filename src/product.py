@@ -28,6 +28,7 @@ class ProductUpdate(BaseModel):
     description: Optional[str] = None
     category: Optional[str] = None
     mrp: Optional[float] = None
+    brand:Optional[str] = None
     quantity:Optional[float]=None
     selling_price: Optional[float] = None
     expiry_date: Optional[str] = None
