@@ -22,7 +22,7 @@
 #         session.close()
 
 # ✅ COMPLETE FIXED CODE
-from sqlalchemy import create_engine, text  # ← text is imported here!
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from src.db_core.setting import setup
 
@@ -35,17 +35,14 @@ engine = create_engine(
     pool_pre_ping=True
 )
 
-# --- Enable pgvector extension ---
-print("🔌 Enabling pgvector extension...")
+# Enable pgvector extension
 try:
     with engine.connect() as conn:
         conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
         conn.commit()
     print("✅ pgvector is ready!")
 except Exception as e:
-    print(f"⚠️ Could not enable pgvector: {e}")
-    print("💡 This may be okay if it's already enabled, or your Render plan may not support it")
-# ---------------------------------
+    print(f"⚠️ pgvector: {e}")
 
 Local_session = sessionmaker(bind=engine)
 
