@@ -4,7 +4,8 @@ pydantic_settings
 SQLAlchemy
 psycopg2-binary
 pgvector
-sentence_transformers
+# sentence_transformers
+httpx
 textblob
 groq
 cloudinary
