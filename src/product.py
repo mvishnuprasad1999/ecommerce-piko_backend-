@@ -7,6 +7,7 @@ class Productmodel(BaseModel):
     name: str
     description: str
     category: str
+    brand: Optional[str] = None
     quantity:float
     mrp: float
     selling_price: float

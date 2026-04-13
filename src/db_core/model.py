@@ -8,6 +8,7 @@ class Productmodeldb(Base):
     name=Column(String)
     description=Column(String)
     quantity=Column(String)
+    brand = Column(String, nullable=True)
     category=Column(String)
     mrp=Column(Float)
     selling_price=Column(Float)
