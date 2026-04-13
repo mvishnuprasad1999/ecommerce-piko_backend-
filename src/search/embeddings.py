@@ -25,17 +25,21 @@
 import os
 import httpx
 
+
 def get_embedding(text: str) -> list:
-    api_url = "https://router.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2"
-    headers = {"Authorization": f"Bearer {os.getenv('HF_TOKEN', '')}"}
+    token = os.getenv('HF_TOKEN', '')
+    print(f"HF_TOKEN length: {len(token)}", flush=True)
+    print(f"HF_TOKEN starts with: {token[:10]}", flush=True)
     
-    response = httpx.post(api_url, json={"inputs": text}, timeout=30)
+    api_url = "https://router.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2"
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    response = httpx.post(api_url, json={"inputs": text}, headers=headers, timeout=30)
     
     print(f"HF Status: {response.status_code}", flush=True)
-    print(f"HF Response: {response.text[:200]}", flush=True)
     
     if response.status_code != 200:
-        raise Exception(f"HuggingFace API error {response.status_code}: {response.text}")
+        raise Exception(f"HuggingFace API error {response.status_code}: {response.text[:100]}")
     
     result = response.json()
     
