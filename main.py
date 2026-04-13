@@ -78,6 +78,7 @@ def create_product(
     name: str = Form(...),
     description: str = Form(...),
     category: str = Form(None),
+    quantity:str =Form(...),
     mrp: float = Form(...),
     selling_price: float = Form(...),
     expiry_date: str = Form(...),
@@ -98,7 +99,7 @@ def create_product(
     # Create product in database
     product = crud.create_product(
         db, name, description, category,
-        mrp, selling_price, expiry_date, stock, image_url
+        mrp,quantity, selling_price, expiry_date, stock, image_url
     )
     
     # Return product data WITHOUT embedding (clean response)
@@ -107,6 +108,7 @@ def create_product(
         "name": product.name,
         "description": product.description,
         "category": product.category,
+        "quantity":product.quantity,
         "mrp": product.mrp,
         "selling_price": product.selling_price,
         "expiry_date": product.expiry_date,
@@ -161,6 +163,7 @@ def update_product(
     name: str = Form(None),
     description: str = Form(None),
     category: str = Form(None),
+    quantity:str=Form(...),
     mrp: float = Form(None),
     selling_price: float = Form(None),
     expiry_date: str = Form(None),
@@ -179,6 +182,7 @@ def update_product(
     if description is not None: product.description = description
     if category is not None: product.category = category
     if mrp is not None: product.mrp = mrp
+    if quantity is not None: product.quantity = quantity
     if selling_price is not None: product.selling_price = selling_price
     if expiry_date is not None: product.expiry_date = expiry_date
     if stock is not None: product.stock = stock

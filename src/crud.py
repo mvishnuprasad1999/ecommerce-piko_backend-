@@ -23,7 +23,7 @@ from src.db_core.model import Productmodeldb
 
 #     return product
 
-def create_product(db, name, description, category, mrp, selling_price, expiry_date, stock, image_url):
+def create_product(db, name, description, category, mrp,quantity, selling_price, expiry_date, stock, image_url):
     text = f"{name} {description} {category}"
     embedding = get_embedding(text)
 
@@ -31,6 +31,7 @@ def create_product(db, name, description, category, mrp, selling_price, expiry_d
         name=name,
         description=description,
         category=category,
+        quantity=quantity,
         mrp=mrp,
         selling_price=selling_price,
         expiry_date=expiry_date,

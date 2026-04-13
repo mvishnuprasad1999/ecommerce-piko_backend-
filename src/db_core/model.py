@@ -7,6 +7,7 @@ class Productmodeldb(Base):
     id=Column(Integer,primary_key=True,index=True)
     name=Column(String)
     description=Column(String)
+    quantity=Column(String)
     category=Column(String)
     mrp=Column(Float)
     selling_price=Column(Float)

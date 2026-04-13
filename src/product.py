@@ -7,6 +7,7 @@ class Productmodel(BaseModel):
     name: str
     description: str
     category: str
+    quantity:float
     mrp: float
     selling_price: float
     expiry_date: str
@@ -26,6 +27,7 @@ class ProductUpdate(BaseModel):
     description: Optional[str] = None
     category: Optional[str] = None
     mrp: Optional[float] = None
+    quantity:Optional[float]=None
     selling_price: Optional[float] = None
     expiry_date: Optional[str] = None
     stock: Optional[int] = None
