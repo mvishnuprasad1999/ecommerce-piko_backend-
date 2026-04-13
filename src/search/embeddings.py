@@ -30,8 +30,18 @@ def get_embedding(text: str) -> list:
     headers = {"Authorization": f"Bearer {os.getenv('HF_TOKEN', '')}"}
     
     response = httpx.post(api_url, json={"inputs": text}, timeout=30)
+    
+    print(f"HF Status: {response.status_code}", flush=True)
+    print(f"HF Response: {response.text[:200]}", flush=True)
+    
+    if response.status_code != 200:
+        raise Exception(f"HuggingFace API error {response.status_code}: {response.text}")
+    
     result = response.json()
     
-    if isinstance(result, list) and isinstance(result[0], list):
-        return result[0]
-    return result
+    if isinstance(result, list) and len(result) > 0:
+        if isinstance(result[0], list):
+            return result[0]
+        return result
+    
+    raise Exception(f"Unexpected response format: {result}")
